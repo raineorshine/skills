@@ -26,6 +26,10 @@ for anything else — so private repos cannot be fetched from a setup script, an
 public. Public marketplaces clone fine during setup. A container installs fresh, so no version bump
 is needed for the cloud to get `main`.
 
+The setup line adds the marketplace and symlinks `plugins/skills/skills/*` into `~/.claude/skills`
+rather than installing the plugin: a plugin's skills are always namespaced (`/skills:learn`), and a
+user skill keeps its plain name. Verified in a cloud session. Never both, or each skill loads twice.
+
 Do not install the plugin on this machine: the user-level skills already load, and the plugin would
 add `skills:*` duplicates beside them. `claude --plugin-dir plugins/skills` loads the working tree
 for one session.

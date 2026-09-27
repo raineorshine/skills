@@ -1,0 +1,4 @@
+interface:
+  display_name: "Learn"
+  short_description: "Record durable repository learnings"
+  default_prompt: "Use $learn to add durable learnings from this task to the repository instructions or documentation."

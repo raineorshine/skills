@@ -1,0 +1,4 @@
+interface:
+  display_name: "Learn Organize"
+  short_description: "Reconcile repository agent guidance"
+  default_prompt: "Use $learn-organize to make this repository’s agent guidance concise, coherent, and correctly scoped."

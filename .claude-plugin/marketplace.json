@@ -1,0 +1,15 @@
+{
+  "name": "skills",
+  "description": "Raine's shareable Claude Code skills, bundled for cloud sessions.",
+  "owner": {
+    "name": "Raine Revere",
+    "email": "raine.revere@pm.me"
+  },
+  "plugins": [
+    {
+      "name": "skills",
+      "description": "Raine's shareable user skills — agent-setup, learn, learn-organize and whatever else is opted in.",
+      "source": "./plugins/skills"
+    }
+  ]
+}

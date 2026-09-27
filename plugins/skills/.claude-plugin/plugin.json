@@ -1,0 +1,10 @@
+{
+  "name": "skills",
+  "description": "Raine's shareable user skills — agent-setup, learn, learn-organize and whatever else is opted in.",
+  "version": "0.1.0",
+  "license": "MIT",
+  "author": {
+    "name": "Raine Revere",
+    "email": "raine.revere@pm.me"
+  }
+}

@@ -1,0 +1,6 @@
+# Skills published in this plugin, one name per line. Opt-in: a skill in ~/.agents/skills is
+# private until its name is added here. Only list skills with nothing personal in them — this
+# repo is public.
+agent-setup
+learn
+learn-organize

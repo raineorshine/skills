@@ -5,10 +5,10 @@ so cloud sessions can run them. One setup-script line installs the whole bundle.
 
 ## Layout
 
-- `GLOBAL_AGENTS.md` — global rules for cloud sessions, imported into `~/.claude/CLAUDE.md` by the setup line
+- `PUBLIC_AGENTS.md` — copy of the public global rules; cloud setup imports it into `~/.claude/CLAUDE.md`
 - `skills.txt` — the opt-in list; a skill is published only when named here
 - `plugins/skills/skills/*/` — copies of the skills; never edit here
-- `sync.sh` — copies the listed skills in from `~/.agents/skills`, commits and pushes
+- `sync.sh` — copies the listed skills and `PUBLIC_AGENTS.md` in from `~/.agents`, commits and pushes
 - `plugins/skills/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` — plugin and marketplace manifests
 
 ## Editing a skill
@@ -22,11 +22,11 @@ skill for names, addresses, account details and private links before listing it.
 
 ## Global instructions
 
-`GLOBAL_AGENTS.md` is canonical here: only the rules from `~/.agents/instructions.md` with nothing
-personal in them, copied by hand, since `sync.sh` copies skills only. Add a rule to both. A plugin
-cannot ship a CLAUDE.md, and its hooks fire only when it is installed, which the setup line does
-not do — so the setup line imports this file into `~/.claude/CLAUDE.md` (`@~/…` imports in user
-memory load without an approval prompt; verified locally).
+`PUBLIC_AGENTS.md` is a copy of `~/.agents/PUBLIC_AGENTS.md`, the global rules with nothing
+personal in them; `sync.sh` copies it, so never edit it here. A plugin cannot ship a CLAUDE.md, and
+its hooks fire only when it is installed, which the setup line does not do — so the setup line
+imports this file into `~/.claude/CLAUDE.md` (`@~/…` imports in user memory load without an
+approval prompt; verified locally).
 
 ## Cloud sessions
 

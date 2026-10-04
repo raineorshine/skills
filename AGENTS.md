@@ -5,6 +5,7 @@ so cloud sessions can run them. One setup-script line installs the whole bundle.
 
 ## Layout
 
+- `instructions.md` — global rules for cloud sessions, imported into `~/.claude/CLAUDE.md` by the setup line
 - `skills.txt` — the opt-in list; a skill is published only when named here
 - `plugins/skills/skills/*/` — copies of the skills; never edit here
 - `sync.sh` — copies the listed skills in from `~/.agents/skills`, commits and pushes
@@ -18,6 +19,14 @@ so cloud sessions can run them. One setup-script line installs the whole bundle.
 
 To publish a skill, add its name to `skills.txt` and run `./sync.sh`. This repo is public: read the
 skill for names, addresses, account details and private links before listing it.
+
+## Global instructions
+
+`instructions.md` is canonical here: only the rules from `~/.agents/instructions.md` with nothing
+personal in them, copied by hand, since `sync.sh` copies skills only. Add a rule to both. A plugin
+cannot ship a CLAUDE.md, and its hooks fire only when it is installed, which the setup line does
+not do — so the setup line imports this file into `~/.claude/CLAUDE.md` (`@~/…` imports in user
+memory load without an approval prompt; verified locally).
 
 ## Cloud sessions
 

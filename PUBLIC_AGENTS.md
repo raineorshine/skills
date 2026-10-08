@@ -3,6 +3,7 @@
 - Write scripts in Node.js, not Python — for helper scripts, one-off data wrangling, and inline `-e` snippets alike. Use Python only when the project is already Python or a library exists nowhere else.
 - Prefer a deterministic script to agent inference whenever the step has one right answer: a CLI, AppleScript (`osascript`), an app's API, a shell pipeline, or a helper script. A script is faster, repeatable, and needs no per-session permission. For example, a Calendar view switch is one `osascript` call, where computer-use clicks need an access grant every session.
 - Keep agents (computer use, browser driving, subagents) for steps that need real inference, such as reading an unfamiliar page, judging content, or choosing between options. When you spot a step that is driven by hand but could be scripted, script it, and put the command in the skill or doc that governs that step.
+- Start node in a Claude Code hook as `NODE_USE_SYSTEM_CA=0 node …`. The desktop app exports `NODE_USE_SYSTEM_CA=1`, a hook runs under `/bin/sh` without the shell profile, and loading the macOS keychain roots adds about 150 ms to every node start, network or not. Leave it off only for a hook that reaches a host signed by a root that lives only in the keychain.
 
 # Worktrees
 

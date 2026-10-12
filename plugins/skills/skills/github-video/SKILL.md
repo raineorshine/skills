@@ -63,8 +63,26 @@ first.
    "read"`, the artifact `url`, `path` set to the published file) and note where it was saved.
 2. **Open the target page** in the user's browser: the issue or pull request the video goes on.
 3. **Attach the file to the new-comment box** at the bottom of the page, with the browser's file
-   upload tool. Wait until the box holds a `https://github.com/user-attachments/assets/<id>` URL.
+   upload tool. The page has no file input until the "Add Files" button ("Paste, drop, or click
+   to add files") is clicked, and a real click opens the system file picker, which the browser
+   tools cannot drive. So run this with `javascript_tool` to catch the input instead:
+
+   ```js
+   const orig = HTMLInputElement.prototype.click;
+   HTMLInputElement.prototype.click = function () {
+     if (this.type !== 'file') return orig.call(this);
+     HTMLInputElement.prototype.click = orig;
+     this.style.display = 'block';
+     if (!this.isConnected) document.body.appendChild(this);
+   };
+   [...document.querySelectorAll('button')].find(b => b.textContent.includes('Add Files')).click();
+   ```
+
+   Then `find` the file input, pass its ref to `file_upload`, and poll the comment textarea's value
+   until it holds a `https://github.com/user-attachments/assets/<id>` URL.
 4. **Copy the URL and clear the box.** Never submit that comment. It exists only to get the URL.
+   Clear it with real keys: click into the box, press cmd+a, then Backspace, and check it shows
+   its placeholder. Delete in place of Backspace left the URL in the box.
 5. **Put the URL where the user asked**, on its own line with a blank line before and after, with
    `gh`, and change nothing else in the text:
    - The description of an issue: `gh issue view <n> --repo <owner/repo> --json body`, edit, then
@@ -72,8 +90,15 @@ first.
      `gh pr`.
    - An existing comment: read it with `gh api repos/<owner/repo>/issues/comments/<id>`, then
      `gh api --method PATCH repos/<owner/repo>/issues/comments/<id> -F body=@<file>`.
+   - Diff the edited file against the fetched one before saving it back, so the URL line is
+     provably the only change.
    - Where the user named no place, follow the repo's issue conventions if it has them (a bug
      report's recording usually goes under Current Behavior), otherwise append it at the end.
 6. **Check it renders.** Reload the page and confirm an inline video player shows where the URL
    went. A bare link means the URL was not a `user-attachments` one, or it shares a line with
    other text.
+   If another extension blocks screenshots and scripts on the page ("Cannot access a
+   chrome-extension:// URL of different extension"), check GitHub's rendering instead:
+   `gh api repos/<owner/repo>/issues/<n> -H "Accept: application/vnd.github.html+json" -q
+   .body_html` should contain a `<video` element after the target heading. `find` and
+   `read_page` still work on such a page, but show the player only as a generic element.

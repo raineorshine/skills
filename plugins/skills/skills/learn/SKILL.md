@@ -156,6 +156,9 @@ These are not bars:
   stop to ask; a learning is cheap to correct afterwards and expensive to lose to an unanswered
   question. When learn was invoked on its own rather than by a ship, take the ship's landing steps
   but not its archive or close-the-session steps: the session is still the user's.
+- When another session holds learnings for the same files, land this pass first if its edits are
+  already written, then have the other session update to the landed result before its pass. Two
+  passes from the same starting point collide in the same lines with overlapping wording.
 - Land the learnings alone. Never sweep unrelated working-tree changes into the ship — commit only
   the agent files and docs this skill edited, plus whatever a companion capture skill wrote at the
   same checkpoint, and say what was left behind. Those files are the other half of the same

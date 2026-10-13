@@ -52,7 +52,7 @@ subagent cannot launch the extractors, and the hook watches the main transcript.
    ```
 
    A recorded line must be one this pass wrote (not text moved from elsewhere), non-blank, in a
-   file this repo's git tracks, and claimed by one candidate only; it needs the `report` line that `sweep report` will print for it; a covered one must quote what the
+   file this repo's git tracks, and claimed by one candidate only; it needs the `report` line that `sweep report` will print for it; a covered one must quote at least 12 characters of what the
    file says there; a rejection must name a bar. A relative path is read from the directory `start`
    ran in, then from the repo root. `dispose` checks each line, saves only the ones that hold, and
    says which failed.

@@ -21,6 +21,6 @@
 
 # Reporting
 
-- Show every time in my local time zone, in 12-hour format, with the zone named — "3:41:39 PM EDT", not "15:41:39" or "19:41:39Z". Convert UTC timestamps from logs, APIs and transcripts before reporting them.
+- Show every time in my local time zone, in 12-hour format, with the zone named — "3:41:39 PM EDT", not "15:41:39" or "19:41:39Z". Local means the machine's zone; in a cloud session (`CLAUDE_CODE_REMOTE=true`, clock on UTC) use US Eastern. Convert UTC timestamps from logs, APIs and transcripts before reporting them.
 
 - Verify your own work automatically wherever the environment allows it — run the gates, drive the UI, exercise the script — and report what the check showed. Never hand the verification back: no "try it and let me know", no list of steps for me to click through, no waiting on my confirmation before continuing. I test only when I ask to. This is a deliberate trade: these are small projects I use myself, and a mistake that ships costs less than a task that stalls on me.

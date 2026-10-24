@@ -372,6 +372,7 @@ export function condenseClaude (entries) {
   const toolNames = new Map()
   const seen = new Set() // reports already kept, by body or task id
   let lastBoundary = null
+  let afterCompact = false // a compaction re-attaches recently read files; they are not the user's
   const add = (e, kind, text, human = false, msg = null, tool = null) => {
     if (text) units.push({ n: e._n, uuid: e.uuid ?? null, ts: e.timestamp ?? null, kind, text, human, msg, tool })
   }
@@ -393,6 +394,7 @@ export function condenseClaude (entries) {
     if (e.isSidechain) continue
     if (e.type === 'system' && e.subtype === 'compact_boundary') {
       lastBoundary = e
+      afterCompact = true
       continue
     }
     if (e.type === 'assistant') {
@@ -409,6 +411,7 @@ export function condenseClaude (entries) {
     if (e.type === 'user') {
       const content = e.message?.content
       if (e.isCompactSummary) {
+        afterCompact = true
         if (lastBoundary && uuids.has(lastBoundary.logicalParentUuid)) {
           add(e, 'compact_summary', '[compaction summary omitted: the entries it summarises are above]')
         } else add(e, 'compact_summary', userText(content))
@@ -439,6 +442,7 @@ export function condenseClaude (entries) {
       }
       const human = isHumanPrompt(e, text)
       add(e, human ? 'human' : 'user_other', text, human)
+      if (human) afterCompact = false
       continue
     }
     if (e.type === 'attachment') {
@@ -446,7 +450,10 @@ export function condenseClaude (entries) {
       if (a.type === 'queued_command') {
         const p = typeof a.prompt === 'string' ? a.prompt : stringify(a.prompt)
         // each of these exists only as this attachment, never as a user entry
-        if (a.origin?.kind === 'human') add(e, 'human_midturn', p.replace(SR, '').trim())
+        if (a.origin?.kind === 'human') {
+          add(e, 'human_midturn', p.replace(SR, '').trim())
+          afterCompact = false
+        }
         else if (a.origin?.kind === 'peer') handback(e, a.origin.body || p)
         else if (a.commandMode === 'task-notification' || a.origin?.kind === 'task-notification' || p.trimStart().startsWith('<task-notification>')) {
           notification(e, p)
@@ -458,6 +465,9 @@ export function condenseClaude (entries) {
         add(e, 'hook_error', trunc(JSON.stringify(a), 800))
       } else if (a.type === 'edited_text_file') {
         add(e, 'user_edit', `[file changed outside the agent: ${a.filename}] ${trunc(a.snippet || '', 800)}`)
+      } else if (a.type === 'file' && !afterCompact) {
+        // an @-attached file (handoffs, say): its text exists only here, never in a tool result
+        add(e, 'attached_file', `[attached: ${a.filename}] ${trunc(String(a.content?.file?.content ?? ''), 8000, 1500, e._n)}`)
       }
     }
     // everything else (system prompt snapshots, listings, reminders, titles,
@@ -507,7 +517,7 @@ function fullText (e) {
     if (Array.isArray(c)) return c.map(b => (b?.type === 'tool_result' ? stringify(b.content) : b?.type === 'text' ? b.text : '')).join('\n')
     return userText(c)
   }
-  if (e.type === 'attachment') return stringify(e.attachment?.prompt ?? e.attachment)
+  if (e.type === 'attachment') return stringify(e.attachment?.prompt ?? e.attachment?.content?.file?.content ?? e.attachment)
   if (e.payload) return stringify(e.payload.item?.content ?? e.payload.content ?? e.payload.output ?? e.payload.input ?? e.payload.arguments ?? e.payload)
   return JSON.stringify(e)
 }
@@ -711,7 +721,9 @@ When the list is done, read it once more for a pattern several candidates share
 changing it) and add that pattern as its own candidate.
 
 The SESSION PROMPTS and CONTEXT blocks before the slice are there so you know the
-task; do not extract from them.
+task; do not extract from them. An attached_file line in the slice is a file the
+user attached (often another session's handoff): extract from it, and say in the
+claim that it is that file's account, not something this session saw.
 
 When done, file your ledger by piping this JSON shape into the command below. It
 checks the ledger and writes it; do not write any file yourself.
@@ -1156,7 +1168,15 @@ function cmdStart (a, io) {
       if (/^chunk-\d+\.(md|ledger\.json)$|^verdict\.json$|^manifest\.json$/.test(name)) rmSync(join(d, name))
     }
     const start = a.full ? 1 : previousEnd(ledgerRoot(transcript, format, io.env), inv.line) + 1
-    const upTo = condense(entries.filter(e => e._n <= inv.line), format)
+    // files @-attached to the invoking message follow it, among its skill body and other
+    // attachments, before the agent's first reply: take them into the span
+    let end = inv.line
+    for (const e of entries) {
+      if (e._n <= inv.line) continue
+      if (e.type === 'attachment' && e.attachment?.type === 'file') end = e._n
+      else if (!(e.type === 'attachment' || (e.type === 'user' && e.isMeta))) break
+    }
+    const upTo = condense(entries.filter(e => e._n <= end), format)
     const units = upTo.filter(u => u.n >= start)
     const cwd = a.repo ? real(expand(a.repo)) : io.cwd
     const { root, base, base_error: baseError } = repoState(cwd)
@@ -1170,7 +1190,7 @@ function cmdStart (a, io) {
       base,
       baseError,
       cwd,
-      span: { start_line: start, end_line: inv.line },
+      span: { start_line: start, end_line: end },
       transcript,
       format,
       invocation: inv,

@@ -174,6 +174,48 @@ test('a background report absorbed mid-turn is kept once', () => {
   assert.equal(reports.length, 1)
 })
 
+const file = (name, text, uuid) => ({ type: 'attachment', uuid, attachment: { type: 'file', filename: name, content: { type: 'text', file: { filePath: name, content: text } } } })
+
+test('an attached file keeps its text', () => {
+  const units = condenseClaude(withLines([
+    human('Distill these handoffs', 'u1'),
+    file('/up/one.md', 'HANDOFF-ONE: the environment ID was ignored', 'f1'),
+    file('/up/big.md', 'y'.repeat(12000), 'f2'),
+  ]))
+  const files = units.filter(u => u.kind === 'attached_file')
+  assert.equal(files.length, 2)
+  assert.match(files[0].text, /^\[attached: \/up\/one\.md\] HANDOFF-ONE/)
+  assert.match(files[1].text, /chars cut; full text: sweep show 3/)
+  assert.ok(files.every(u => !u.human), 'an attachment never opens a turn of its own')
+})
+
+test('files a compaction re-attaches are not taken as the user\'s', () => {
+  const units = condenseClaude(withLines([
+    human('Read the config', 'u1'),
+    { type: 'system', uuid: 'b1', subtype: 'compact_boundary', logicalParentUuid: 'u1' },
+    { type: 'user', uuid: 's1', isCompactSummary: true, message: { role: 'user', content: 'summary' } },
+    file('/repo/config.json', 'RESTORED-READ', 'f1'),
+    human('Now use these notes', 'u2'),
+    file('/up/notes.md', 'USER-ATTACHED', 'f2'),
+  ]))
+  const text = units.filter(u => u.kind === 'attached_file').map(u => u.text).join('\n')
+  assert.doesNotMatch(text, /RESTORED-READ/)
+  assert.match(text, /USER-ATTACHED/)
+  const noBoundary = condenseClaude(withLines([
+    { type: 'user', uuid: 's1', isCompactSummary: true, message: { role: 'user', content: 'summary' } },
+    file('/repo/config.json', 'RESTORED-READ', 'f1'),
+  ]))
+  assert.ok(!noBoundary.some(u => u.kind === 'attached_file'), 'a summary without its boundary still marks a compaction')
+})
+
+test('files attached to the invoking message join the span', () => {
+  const env = makeEnv([...session(), file('/up/handoff.md', 'HANDOFF-AFTER-INVOCATION', 'f1')])
+  assert.equal(env.run(['start']).code, 0)
+  assert.equal(env.manifest().span.end_line, 12)
+  assert.match(readFileSync(env.chunk(1), 'utf8'), /HANDOFF-AFTER-INVOCATION/)
+  assert.match(env.run(['show', '--transcript', env.transcript, '--line', '12']).out, /^HANDOFF-AFTER-INVOCATION$/m)
+})
+
 test('long text is cut with a pointer to its full entry', () => {
   const units = condenseClaude(withLines([human('go', 'u1'), toolUse('Bash', { command: 'x'.repeat(9000) }, 'a1', 'm1', 't1')]))
   assert.match(units[1].text, /chars cut; full text: sweep show 2/)

@@ -18,6 +18,12 @@
 # Scheduling
 
 - Never schedule background work during working hours — no 9am jobs. Default recurring and unattended runs to 22:00 local, the slot I already use.
+- A one-off run I ask for with no time named starts now, overriding the 22:00 default: create it with no schedule and fire it at once, not a few minutes out.
+
+# Cloud sessions
+
+- In a Claude Code cloud session, hand work to another repo or environment with `create_session`: the `env_…` ID from `list_environments`, the repo as `source_url`. Then check with `get_session` on the child that it landed there. No route tried from a regular claude.ai chat did this: the scheduled tasks it created ran as chats, even when given a Claude Code environment's ID (observed 2026-10-24).
+- The child has none of the parent's context, so its start prompt must stand alone. It doesn't wake the parent when done: read its result with `list_events`, after a `send_later` check-in a few minutes out (a follow-up on live work, not background work; it fails if this session is gone by then). It may wait for my approval before an outward step another session asks for (one child did, for a `send_message` back), so give me its `claude.ai/code/session_<id>` link.
 
 # Reporting
 
